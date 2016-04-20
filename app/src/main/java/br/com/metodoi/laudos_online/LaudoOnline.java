@@ -23,7 +23,6 @@ import java.net.URL;
 public class LaudoOnline extends AsyncTask<String, Void, Void> {
 
     private Context contexto;
-    static Laudo laudo = new Laudo();
     private ProgressDialog dialogoDeProgresso;
 
 
@@ -83,8 +82,5 @@ public class LaudoOnline extends AsyncTask<String, Void, Void> {
         ((Laudo)contexto).abrir();
     }
 
-    @Override
-    protected void onCancelled() {
-        super.onCancelled();
-    }
+
 }
