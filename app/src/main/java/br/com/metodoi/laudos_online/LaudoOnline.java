@@ -22,6 +22,7 @@ import java.net.URL;
  */
 public class LaudoOnline extends AsyncTask<String, Void, Void> {
 
+    private static final String DIRETORIO_SD_CARD = "/sdcard/LaudoOnline/laudoonline.pdf";
     private Context contexto;
     private ProgressDialog dialogoDeProgresso;
 
@@ -31,19 +32,44 @@ public class LaudoOnline extends AsyncTask<String, Void, Void> {
         dialogoDeProgresso = new ProgressDialog(contexto);
     }
 
+    public LaudoOnline() {
+    }
+
     private static void desativarDeteccaoDeProblemas(){
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
     }
 
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        dialogoDeProgresso = ProgressDialog.show(contexto, "Aguarde ...", "Enquanto o Laudo é carregado.", true);
+        dialogoDeProgresso.setCancelable(true);
+        dialogoDeProgresso.show();
+        desativarDeteccaoDeProblemas();
+    }
 
-    public static void baixar(String endereco){
+    @Override
+    protected Void doInBackground(String... parametros) {
+        baixar(parametros[0].toString(), DIRETORIO_SD_CARD);
+        return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void aVoid) {
+        super.onPostExecute(aVoid);
+        dialogoDeProgresso.dismiss();
+        ((Laudo)contexto).abrir();
+
+    }
+
+    public void baixar(String endereco,String diretorioOndeDeveSerSalvoOLaudo){
         try {
-            desativarDeteccaoDeProblemas();
+
             URL url = new URL(endereco);
             HttpURLConnection conexaoHttp = (HttpURLConnection) url.openConnection();
             conexaoHttp.connect();
-            FileOutputStream fileOutputStream = new FileOutputStream("/sdcard/LaudoOnline/laudoonline.pdf");
+            FileOutputStream fileOutputStream = new FileOutputStream(diretorioOndeDeveSerSalvoOLaudo);
             InputStream inputStream = conexaoHttp.getInputStream();
 
             byte[] buffer = new byte[1024];
@@ -59,27 +85,6 @@ public class LaudoOnline extends AsyncTask<String, Void, Void> {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    protected Void doInBackground(String... params) {
-        baixar(params[0].toString());
-        return null;
-    }
-
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        dialogoDeProgresso = ProgressDialog.show(contexto, "Aguarde ...", "Enquanto o Laudo é carregado.", true);
-        dialogoDeProgresso.setCancelable(true);
-        dialogoDeProgresso.show();
-    }
-
-    @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
-        dialogoDeProgresso.dismiss();
-        ((Laudo)contexto).abrir();
     }
 
 

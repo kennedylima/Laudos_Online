@@ -2,14 +2,12 @@ package br.com.metodoi.laudos_online;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -23,7 +21,7 @@ import butterknife.OnClick;
 import me.drakeet.materialdialog.MaterialDialog;
 
 
-public class Laudo extends AppCompatActivity  {
+public class Laudo extends Activity {
 
     @Bind(R.id.codigo)
     EditText codigo;
@@ -33,34 +31,35 @@ public class Laudo extends AppCompatActivity  {
 
     private static final int CODIGO_DO_PEDIDO_DE_PERMISSAO = 128;
     private MaterialDialog janelaDeDialogo;
+    private Diretorio diretorio = new Diretorio();
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_laudo_online);
+        setContentView(R.layout.activity_acessar);
         ButterKnife.bind(this);
     }
 
    @OnClick(R.id.botaoAcessar)
     public void acessar(){
-       verificarPermissaoParaCriarPastaNoSdCard();
-       verificarPermissaoParaCriarArquivosNaPastaLaudoOnline();
+       solicitarPermissaoParaCriarPastaNoSdCard();
+       solicitarPermissaoParaCriarArquivosNaPastaLaudoOnline();
        criarPastaLaudoOnline();
+       verificarSeOsCamposForamPreenchidos();
+   }
 
-       if(verificarSeOsCamposForamPreenchidos() == true) {
-           baixar();
-       }
-}
-
-    private boolean verificarSeOsCamposForamPreenchidos() {
-        if(codigo.getText().length() == 0 || chave.getText().length() == 0){
-            Toast.makeText(this,"Os campos 'Chave' e 'Codigo' devem ser preenchidos! ",Toast.LENGTH_SHORT).show();
-            return false;
+    private void verificarSeOsCamposForamPreenchidos() {
+        if(codigo.getText().length() == 0 || chave.getText().length() == 0) {
+            Toast.makeText(this, "Os campos 'Chave' e 'Codigo' devem ser preenchidos! ", Toast.LENGTH_SHORT).show();
         }else{
-            return true;
-        }
+            if(arquivoExiste()){
+                abrir();
+            }else {
+                baixar();
+            }
 
+        }
     }
 
     private void baixar()  {
@@ -69,44 +68,40 @@ public class Laudo extends AppCompatActivity  {
 
     }
 
-    private String getURL(){
-        String codigoInformado = codigo.getText().toString();
-        String chaveInformada = chave.getText().toString();
-        return getEndereco()+"codigo="+codigoInformado+"&chave="+chaveInformada;
-    }
-
-    private String getEndereco(){
-        return "http://laudoonline.clinicascope.com.br/laudoonline.php?";
-    }
-
     public void criarPastaLaudoOnline(){
         String sdCardMontado = Environment.getExternalStorageState();
         if(Environment.MEDIA_MOUNTED.equals(sdCardMontado)) {
-            File pastaLaudoOnline = new File(getDiretorioDaPastaLaudoOnline());
+            File pastaLaudoOnline = new File(diretorio.getPastaLaudoOnline());
             if (!pastaLaudoOnline.exists()) {
                 pastaLaudoOnline.mkdir();
             }
         }
     }
 
-
     public  void abrir(){
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        File diretorioDoArquivoLaudoOnlinePDF = new File(getDiretorioDoArquivoLaudoOnlinePDF());
-        intent.setDataAndType(Uri.fromFile(diretorioDoArquivoLaudoOnlinePDF), "application/pdf");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        startActivity(intent);
+        renomear();
+        if(arquivoExiste()) {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            File diretorioDoArquivoLaudoOnlinePDF = new File(getDiretorioDoArquivoLaudoOnlinePDF());
+            intent.setDataAndType(Uri.fromFile(diretorioDoArquivoLaudoOnlinePDF), "application/pdf");
+            intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            startActivity(intent);
+            limparCampos();
+        }else{
+            Toast.makeText(this, "Código ou Chave Inválido! ", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private  String getDiretorioDaPastaLaudoOnline(){
-        return "/sdcard/LaudoOnline/";
+    private void limparCampos() {
+        codigo.setText("");
+        chave.setText("");
     }
 
-    private String getDiretorioDoArquivoLaudoOnlinePDF(){
-        return getDiretorioDaPastaLaudoOnline()+"laudoonline.pdf";
+    private boolean arquivoExiste() {
+        return new File(getDiretorioDoArquivoLaudoOnlinePDF()).exists();
     }
 
-    private void verificarPermissaoParaCriarPastaNoSdCard(){
+    public void solicitarPermissaoParaCriarPastaNoSdCard(){
 
         if( ContextCompat.checkSelfPermission( this, Manifest.permission.WRITE_EXTERNAL_STORAGE ) != PackageManager.PERMISSION_GRANTED ){
 
@@ -116,6 +111,7 @@ public class Laudo extends AppCompatActivity  {
             }
             else{
                 ActivityCompat.requestPermissions( this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, CODIGO_DO_PEDIDO_DE_PERMISSAO );
+
             }
         }
         else{
@@ -124,7 +120,7 @@ public class Laudo extends AppCompatActivity  {
 
     }
 
-    private void verificarPermissaoParaCriarArquivosNaPastaLaudoOnline(){
+    public void solicitarPermissaoParaCriarArquivosNaPastaLaudoOnline(){
 
         if( ContextCompat.checkSelfPermission( this, Manifest.permission.READ_EXTERNAL_STORAGE ) != PackageManager.PERMISSION_GRANTED ){
             if( ActivityCompat.shouldShowRequestPermissionRationale( this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
@@ -133,11 +129,18 @@ public class Laudo extends AppCompatActivity  {
             }
             else{
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, CODIGO_DO_PEDIDO_DE_PERMISSAO);
+
             }
         }
         else {
             criarPastaLaudoOnline();
         }
+    }
+
+    public void renomear(){
+        File laudo = new File(diretorio.getPastaLaudoOnline(),"laudoonline.pdf");
+        File laudoRenomeado = new File(diretorio.getPastaLaudoOnline(),"Laudo - "+codigo.getText()+".pdf");
+        laudo.renameTo(laudoRenomeado);
     }
 
     private void janelaDeDialogo( String mensagem, final String[] permissoes ){
@@ -161,6 +164,19 @@ public class Laudo extends AppCompatActivity  {
         janelaDeDialogo.show();
     }
 
+    private String getURL(){
+        String codigoInformado = codigo.getText().toString();
+        String chaveInformada = chave.getText().toString();
+        return getEndereco()+"codigo="+codigoInformado+"&chave="+chaveInformada;
+    }
+
+    private String getEndereco(){
+        return "http://laudoonline.clinicascope.com.br/laudoonline.php?";
+    }
+
+    private String getDiretorioDoArquivoLaudoOnlinePDF(){
+        return diretorio.getPastaLaudoOnline()+"Laudo - "+codigo.getText()+".pdf";
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {

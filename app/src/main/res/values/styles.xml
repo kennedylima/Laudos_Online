@@ -7,6 +7,13 @@
         <item name="colorPrimaryDark">@color/corPrincipalDark</item>
         <item name="colorAccent">@color/corDoRealceDoCampo</item>
     </style>
+
+    <style name="ListView">
+        <item name="android:dividerHeight">2px</item>
+        <item name="android:divider">#E0E0E0</item>
+        <item name="android:cacheColorHint">#00000000</item>
+    </style>
+
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
