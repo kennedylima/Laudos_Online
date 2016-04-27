@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.File;
@@ -29,9 +30,11 @@ public class Laudo extends Activity {
     @Bind(R.id.chave)
     EditText chave;
 
+
     private static final int CODIGO_DO_PEDIDO_DE_PERMISSAO = 128;
     private MaterialDialog janelaDeDialogo;
     private Diretorio diretorio = new Diretorio();
+    public static Boolean cancelado = false;
 
 
     @Override
@@ -43,6 +46,7 @@ public class Laudo extends Activity {
 
    @OnClick(R.id.botaoAcessar)
     public void acessar(){
+       cancelado = false;
        solicitarPermissaoParaCriarPastaNoSdCard();
        solicitarPermissaoParaCriarArquivosNaPastaLaudoOnline();
        criarPastaLaudoOnline();
@@ -79,18 +83,36 @@ public class Laudo extends Activity {
     }
 
     public  void abrir(){
-        renomear();
-        if(arquivoExiste()) {
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            File diretorioDoArquivoLaudoOnlinePDF = new File(getDiretorioDoArquivoLaudoOnlinePDF());
-            intent.setDataAndType(Uri.fromFile(diretorioDoArquivoLaudoOnlinePDF), "application/pdf");
-            intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-            startActivity(intent);
-            limparCampos();
-        }else{
+
+         if(cancelado == true){
+             Toast.makeText(this, "Operação Cancelada! ", Toast.LENGTH_SHORT).show();
+
+         }else if(!arquivoValido()){
             Toast.makeText(this, "Código ou Chave Inválido! ", Toast.LENGTH_SHORT).show();
-        }
+
+         }else {
+                 Intent intent = new Intent(Intent.ACTION_VIEW);
+                 File diretorioDoArquivoLaudoOnlinePDF = new File(getDiretorioDoArquivoLaudoOnlinePDF());
+                 intent.setDataAndType(Uri.fromFile(diretorioDoArquivoLaudoOnlinePDF), "application/pdf");
+                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                 startActivity(intent);
+                 limparCampos();
+         }
     }
+
+    private boolean arquivoValido() {
+        renomear(diretorio.getPastaLaudoOnline(), codigo.getText().toString());
+        File laudo = new File(getDiretorioDoArquivoLaudoOnlinePDF());
+        final int HUM_MEGA_BYTE = 1024;
+        if(laudo.length() > HUM_MEGA_BYTE){
+            return true;
+        }else{
+            laudo.delete();
+            limparCampos();
+        }
+        return false;
+    }
+
 
     private void limparCampos() {
         codigo.setText("");
@@ -137,9 +159,9 @@ public class Laudo extends Activity {
         }
     }
 
-    public void renomear(){
-        File laudo = new File(diretorio.getPastaLaudoOnline(),"laudoonline.pdf");
-        File laudoRenomeado = new File(diretorio.getPastaLaudoOnline(),"Laudo - "+codigo.getText()+".pdf");
+    public void renomear(String diretorio, String codigo){
+        File laudo = new File(diretorio,"laudoonline.pdf");
+        File laudoRenomeado = new File(diretorio,"Laudo - "+codigo+".pdf");
         laudo.renameTo(laudoRenomeado);
     }
 

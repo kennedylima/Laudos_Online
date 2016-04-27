@@ -46,7 +46,4 @@
         android:textColor="#FFFFFF"
         android:background="@color/corPrincipal" />
 
-
-
-
 </RelativeLayout>

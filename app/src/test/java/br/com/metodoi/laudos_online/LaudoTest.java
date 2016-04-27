@@ -27,9 +27,9 @@ public class LaudoTest {
 
     @Test
     public void deve_renomear_o_laudo(){
-        String codigo = "78985";
+        String codigo = "78985 - Alterado 2";
         Laudo laudo = new Laudo();
-        File laudoOnline = new File(DIRETORIO_ONDE_DEVE_SER_SALVO_O_LAUDO_NA_MAQUINA+"laudo"+codigo+".pdf");
+        File laudoOnline = new File(DIRETORIO_ONDE_DEVE_SER_SALVO_O_LAUDO_NA_MAQUINA+"Laudo - "+codigo+".pdf");
         laudo.renomear(DIRETORIO_ONDE_DEVE_SER_SALVO_O_LAUDO_NA_MAQUINA, codigo);
 
         Assert.assertTrue(laudoOnline.exists());

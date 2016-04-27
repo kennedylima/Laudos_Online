@@ -31,7 +31,7 @@ public class MainActivity extends TabActivity {
 
         TabHost.TabSpec segundaAba = tabHost.newTabSpec("Segunda Aba");
         segundaAba.setIndicator("Laudos");
-        segundaAba.setContent(new Intent(this, ListaDeLaudos.class));
+        segundaAba.setContent(new Intent(this, ListaDeLaudos.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
 
         tabHost.addTab(primeiraAba);
         tabHost.addTab(segundaAba);
